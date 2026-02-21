@@ -18,6 +18,10 @@ def test_registry_raises_on_unknown():
     with pytest.raises(ValueError, match="Unknown provider"):
         get_provider("nonexistent")
 
+
+anthropic = pytest.importorskip("anthropic", reason="anthropic SDK not installed")
+
+
 @pytest.mark.asyncio
 async def test_anthropic_extract(monkeypatch):
     from maestro_fetch.providers.anthropic import AnthropicProvider
