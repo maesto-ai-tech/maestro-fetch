@@ -1,6 +1,8 @@
 # maestro-fetch
 
-> Fetch data from any URL -- web, PDF, cloud, video, images -- with swappable LLM providers.
+> Universal data acquisition toolkit -- fetch from any URL: web, PDF, cloud, video, images.
+
+**[maestro.onl](https://maestro.onl)** | [Documentation](https://maestro.onl/docs) | [Dataset Catalog](https://ra.maestro.onl/data/datasets) | [GitHub](https://github.com/maesto-ai-tech/maestro-fetch)
 
 ## Why maestro-fetch?
 
@@ -88,6 +90,25 @@ Add to your Claude Code config:
 
 Tools: `fetch_url`, `batch_fetch_urls`, `detect_url_type`
 
+## Data Sources
+
+maestro-fetch works with 23+ public data sources out of the box across 6 domains:
+
+| Domain | Sources | Examples |
+|--------|---------|----------|
+| Weather | 7 | Open-Meteo, NOAA, DWD, CMA, NASA POWER |
+| Economics | 4 | FRED, World Bank, OECD, Eurostat |
+| Labor | 3 | BLS, ILO, Japan e-Stat |
+| Politics | 3 | V-Dem, WGI, Freedom House |
+| Environment | 3 | WAQI, EPA AQS, Copernicus |
+| Urban | 3 | US Census, OpenStreetMap, GTFS |
+
+Browse the full catalog with API endpoints, auth requirements, and example queries at **[ra.maestro.onl/data/datasets](https://ra.maestro.onl/data/datasets)**.
+
+See working examples in the [`examples/`](./examples/) directory:
+- [`global_weather.py`](./examples/global_weather.py) -- 30 cities, 4 data strategies
+- [`china_weather_historical.py`](./examples/china_weather_historical.py) -- decades of daily records
+
 ## FetchResult
 
 ```python
@@ -110,10 +131,14 @@ URL -> Router (detect_type) -> Adapter (fetch) -> FetchResult
 Adapters: `CloudAdapter`, `DocAdapter`, `WebAdapter`, `MediaAdapter`
 Providers: `AnthropicProvider`, `OpenAIProvider` (pluggable via registry)
 
+## Professional Data Services
+
+Need custom data pipelines, panel data construction, or large-scale data engineering for academic research? **[RA Data](https://ra.maestro.onl/data)** provides professional data services powered by maestro-fetch.
+
 ## License
 
 MIT
 
 ---
 
-Built by [Maestro AI](https://maestro.onl) -- Singapore AI product studio.
+Built by **[Maestro](https://maestro.onl)** -- Singapore AI product studio.
