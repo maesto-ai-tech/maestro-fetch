@@ -72,6 +72,46 @@ dropbox.com/*, drive.google.com/* -> cloud (resolve share link + download)
 youtube.com/watch*, youtu.be/* -> media (yt-dlp + Whisper transcription)
 Everything else -> web (headless browser via Crawl4AI)
 
+## Project Structure
+
+maestro_fetch/
+  __init__.py              # exports: fetch, batch_fetch
+  core/
+    config.py              # FetchConfig dataclass (provider, schema, headers, cookies, timeout)
+    result.py              # FetchResult dataclass (url, source_type, content, tables, metadata)
+    router.py              # detect_type(url) -> "web"|"doc"|"cloud"|"media"
+    fetcher.py             # Fetcher: dispatches URL to correct adapter
+    errors.py              # FetchError, DownloadError, UnsupportedURLError
+  adapters/
+    base.py                # BaseAdapter ABC (supports, fetch)
+    web.py                 # WebAdapter -- Crawl4AI headless browser
+    doc.py                 # DocAdapter -- PDF (Docling), Excel (openpyxl), CSV (pandas)
+    cloud.py               # CloudAdapter -- Dropbox, Google Drive share links
+    media.py               # MediaAdapter -- yt-dlp + Whisper transcription
+  providers/
+    base.py                # LLMProvider ABC
+    registry.py            # @register decorator + get_provider()
+    anthropic.py           # AnthropicProvider (needs ANTHROPIC_API_KEY)
+    openai.py              # OpenAIProvider (needs OPENAI_API_KEY)
+  interfaces/
+    sdk.py                 # fetch(), batch_fetch() -- public async API
+    cli.py                 # maestro-fetch CLI (typer)
+    mcp_server.py          # MCP server (fastmcp)
+
+## Key Design Decisions
+
+- Adapter priority: Cloud > Doc > Web (most specific first, Web is fallback)
+- LLM providers are optional; core fetch works without any API key
+- batch_fetch uses asyncio.Semaphore for concurrency control
+- headers/cookies are passed through to httpx and Crawl4AI
+- Python 3.11+ required
+
+## Build & Test
+
+python3.11 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+pytest tests/unit/ -v   # 42 tests, all mocked, no network needed
+
 ## Links
 
 - Homepage: https://maestro.onl

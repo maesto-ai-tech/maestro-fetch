@@ -7,3 +7,10 @@ dist/
 .ruff_cache/
 .worktrees/
 .maestro_cache/
+
+# Internal dev files (not for open source release)
+CLAUDE.md
+docs/plans/
+docs/test-urls.md
+cert_key
+cert_key.pub
