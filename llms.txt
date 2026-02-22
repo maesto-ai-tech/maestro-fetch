@@ -1,0 +1,80 @@
+# maestro-fetch
+
+> Universal data acquisition toolkit. Fetch structured data from any URL.
+
+maestro-fetch is a Python library and MCP server that fetches data from any URL:
+web pages, APIs, PDFs, Excel/CSV, cloud storage (Dropbox, Google Drive),
+and video/audio (YouTube). It auto-detects the source type and returns
+structured content as markdown, tables (pandas DataFrames), and metadata.
+
+## Quick Start (MCP Server for AI Agents)
+
+Install: pip install maestro-fetch[mcp]
+
+Add to Claude Code .mcp.json:
+{
+  "mcpServers": {
+    "maestro-fetch": {
+      "command": "maestro-fetch-mcp"
+    }
+  }
+}
+
+## MCP Tools
+
+### fetch_url
+Fetch data from any single URL. Auto-detects source type.
+Parameters:
+- url (string, required): The URL to fetch
+- output_format (string, optional): "markdown" | "json" | "csv". Default: "markdown"
+- provider (string, optional): "anthropic" | "openai". Only needed with schema extraction.
+Returns: { url, source_type, content, table_count, metadata }
+
+### batch_fetch_urls
+Fetch multiple URLs concurrently.
+Parameters:
+- urls (list of strings, required): URLs to fetch
+- output_format (string, optional): "markdown" | "json" | "csv"
+- concurrency (integer, optional): Max parallel requests. Default: 5
+Returns: list of { url, source_type, content, table_count }
+
+### detect_url_type
+Classify a URL into source type without downloading.
+Parameters:
+- url (string, required): URL to classify
+Returns: { url, source_type } where source_type is "web" | "doc" | "cloud" | "media"
+
+## Python SDK
+
+from maestro_fetch import fetch, batch_fetch
+
+# Basic fetch (no API key needed)
+result = await fetch("https://example.com/data")
+result.content      # markdown text
+result.tables       # list[pd.DataFrame]
+result.source_type  # "web" | "doc" | "cloud" | "media"
+result.metadata     # dict
+
+# With custom headers
+result = await fetch(url, headers={"Authorization": "Bearer token"})
+
+# Batch fetch
+results = await batch_fetch(urls, concurrency=10)
+
+# LLM extraction (requires ANTHROPIC_API_KEY or OPENAI_API_KEY)
+result = await fetch(url, schema={"field": str}, provider="anthropic")
+
+## URL Type Detection
+
+*.pdf -> doc (PDF parsing via Docling/pdfplumber)
+*.xlsx, *.xls, *.csv -> doc (spreadsheet parsing via openpyxl/pandas)
+dropbox.com/*, drive.google.com/* -> cloud (resolve share link + download)
+youtube.com/watch*, youtu.be/* -> media (yt-dlp + Whisper transcription)
+Everything else -> web (headless browser via Crawl4AI)
+
+## Links
+
+- Homepage: https://maestro.onl
+- GitHub: https://github.com/maesto-ai-tech/maestro-fetch
+- Dataset Catalog: https://ra.maestro.onl/data/datasets
+- Professional Data Services: https://ra.maestro.onl/data
