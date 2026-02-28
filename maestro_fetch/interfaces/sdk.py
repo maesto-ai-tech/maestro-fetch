@@ -24,7 +24,7 @@ async def fetch(
     model: str | None = None,
     schema: dict | None = None,
     output_format: str = "markdown",
-    cache_dir: str = ".maestro_cache",
+    cache_dir: str = str(Path.home() / ".maestro" / "cache"),
     timeout: int = 60,
     headers: dict[str, str] | None = None,
     cookies: dict[str, str] | None = None,

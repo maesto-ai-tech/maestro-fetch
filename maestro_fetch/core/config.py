@@ -18,7 +18,7 @@ class FetchConfig:
     model: str | None = None
     schema: dict | None = None
     output_format: str = "markdown"
-    cache_dir: Path = Path(".maestro_cache")
+    cache_dir: Path = Path.home() / ".maestro" / "cache"
     timeout: int = 60
     max_retries: int = 3
     headers: dict[str, str] | None = None
