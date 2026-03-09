@@ -38,9 +38,36 @@ _RULES: list[tuple[str, str]] = [
 ]
 
 
+def _extract_embedded_filename(url: str) -> str:
+    """Extract filename embedded in query parameters (e.g. ABS openagent URLs).
+
+    ABS subscriber URLs look like:
+      .../log?openagent&some_file.zip&...&Latest
+    The filename is the first query token that contains a file extension.
+    Returns empty string if none found.
+    """
+    q = url.split("?", 1)
+    if len(q) < 2:
+        return ""
+    for token in q[1].split("&"):
+        if re.search(r"\.[a-z0-9]{2,8}$", token, re.IGNORECASE):
+            return token
+    return ""
+
+
 def detect_type(url: str) -> str:
-    """Return source type string for URL. Falls back to 'web'."""
+    """Return source type string for URL. Falls back to 'web'.
+
+    Also checks filenames embedded inside query strings (e.g. ABS openagent
+    subscriber URLs where the filename appears as a query parameter token).
+    """
     for pattern, source_type in _RULES:
         if re.search(pattern, url, re.IGNORECASE):
             return source_type
+    # Fallback: check for filename embedded in query params
+    embedded = _extract_embedded_filename(url)
+    if embedded:
+        for pattern, source_type in _RULES:
+            if re.search(pattern, embedded, re.IGNORECASE):
+                return source_type
     return "web"

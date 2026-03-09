@@ -56,11 +56,31 @@ def _format_size(n_bytes: int) -> str:
     return f"{n_bytes / 1e3:.1f} KB"
 
 
+def _embedded_filename(url: str) -> str:
+    """Extract filename embedded in query parameters (e.g. ABS openagent URLs).
+
+    ABS subscriber URLs look like:
+      .../log?openagent&some_file.zip&...&Latest
+    Returns the first query token that looks like a filename (has an extension).
+    """
+    parts = url.split("?", 1)
+    if len(parts) < 2:
+        return ""
+    for token in parts[1].split("&"):
+        if re.search(r"\.[a-z0-9]{2,8}$", token, re.IGNORECASE):
+            return token
+    return ""
+
+
 class BinaryAdapter(BaseAdapter):
     """Streams binary/archive/data files to disk with cache detection."""
 
     def supports(self, url: str) -> bool:
-        return any(re.search(p, url, re.IGNORECASE) for p in _BINARY_PATTERNS)
+        if any(re.search(p, url, re.IGNORECASE) for p in _BINARY_PATTERNS):
+            return True
+        # Also check filenames embedded in query parameters (e.g. ABS openagent URLs)
+        embedded = _embedded_filename(url)
+        return bool(embedded and any(re.search(p, embedded, re.IGNORECASE) for p in _BINARY_PATTERNS))
 
     async def fetch(self, url: str, config: FetchConfig) -> FetchResult:
         filename = self._filename_from_url(url)
@@ -162,7 +182,16 @@ class BinaryAdapter(BaseAdapter):
 
     @staticmethod
     def _filename_from_url(url: str) -> str:
-        """Extract filename from URL, stripping query string."""
+        """Extract filename from URL.
+
+        For standard URLs: use the path component before the query string.
+        For ABS-style openagent URLs: the filename is embedded as the first
+        query-parameter token that contains a file extension (e.g.
+        ``log?openagent&cg_sa2_2011_sa2_2016.zip&...``).
+        """
+        embedded = _embedded_filename(url)
+        if embedded:
+            return embedded
         path = url.split("?")[0].rstrip("/")
         return path.split("/")[-1] or "download"
 
