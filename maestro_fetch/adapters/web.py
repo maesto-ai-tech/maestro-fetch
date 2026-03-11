@@ -106,7 +106,9 @@ async def _playwright_stealth_fetch(url: str, config: FetchConfig) -> str:
         await stealth_async(page)
 
         try:
-            await page.goto(url, timeout=timeout_ms, wait_until="networkidle")
+            await page.goto(url, timeout=timeout_ms, wait_until="domcontentloaded")
+            # Give JS a moment to render dynamic content
+            await page.wait_for_timeout(2000)
             html = await page.content()
         except Exception as exc:
             await browser.close()
