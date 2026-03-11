@@ -192,15 +192,20 @@ class WebAdapter(BaseAdapter):
                     crawl_kwargs["headers"] = config.headers
                 crawl_result = await crawler.arun(**crawl_kwargs)
                 if crawl_result.success:
-                    return FetchResult(
-                        url=url,
-                        source_type="web",
-                        content=crawl_result.markdown or "",
-                        tables=[],
-                        metadata={"adapter": "crawl4ai"},
-                    )
-                # crawl4ai returned success=False -- treat as transient
-                crawl4ai_error = DownloadError(f"Crawl4AI failed for {url}")
+                    md = crawl_result.markdown or ""
+                    if not _is_waf_blocked(md):
+                        return FetchResult(
+                            url=url,
+                            source_type="web",
+                            content=md,
+                            tables=[],
+                            metadata={"adapter": "crawl4ai"},
+                        )
+                    # crawl4ai rendered a WAF block page -- escalate to httpx/stealth
+                    crawl4ai_error = DownloadError(f"WAF block detected (crawl4ai) for {url}")
+                else:
+                    # crawl4ai returned success=False -- treat as transient
+                    crawl4ai_error = DownloadError(f"Crawl4AI failed for {url}")
         except ImportError:
             # crawl4ai not installed; skip directly to httpx fallback.
             pass
