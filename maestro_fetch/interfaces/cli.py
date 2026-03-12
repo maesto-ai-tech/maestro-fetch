@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import shutil
 import sys
 from pathlib import Path
 from typing import Optional
@@ -97,6 +98,16 @@ def _print_result(
     output_dir: Optional[Path],
 ) -> None:
     """Format and print a FetchResult to stdout (or save to file)."""
+    # Binary results (images, archives, data files): copy raw file to output_dir
+    if getattr(result, "source_type", None) == "binary" and output_dir and getattr(result, "raw_path", None):
+        raw_path = Path(result.raw_path)
+        if raw_path.exists():
+            output_dir.mkdir(parents=True, exist_ok=True)
+            dest = output_dir / raw_path.name
+            if dest.resolve() != raw_path.resolve():
+                shutil.copy2(raw_path, dest)
+            typer.echo(f"Saved to {dest}")
+            return
     if output_format == "markdown":
         typer.echo(result.content)
     elif output_format == "json":

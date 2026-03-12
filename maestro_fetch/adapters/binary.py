@@ -1,10 +1,11 @@
-"""BinaryAdapter -- streaming download for archives and binary data files.
+"""BinaryAdapter -- streaming download for archives, binary data files, and images.
 
-Responsibility: download any binary/archive/data file via streaming httpx,
+Responsibility: download any binary/archive/data/image file via streaming httpx,
 with cache-hit detection and progress reporting.
 
 Handles: .zip .gz .tar .bz2 .7z .rar .nc .tiff .tif .geotiff .parquet
          .dta .shp .dbf .prj .cpg .h5 .hdf5 .feather .arrow .npy .npz
+         .jpg .jpeg .png .gif .webp .bmp .svg .ico .avif .heic .heif
 
 Invariants:
   - supports() matches known binary file extensions
@@ -15,6 +16,7 @@ Invariants:
 """
 from __future__ import annotations
 
+import asyncio
 import re
 import sys
 from pathlib import Path
@@ -43,9 +45,22 @@ _BINARY_PATTERNS = [
     r"\.(dta|sas7bdat|sav|por)(\?|$)",  # Stata, SAS, SPSS
     r"\.(npy|npz|mat|pkl|pickle)(\?|$)",
     r"\.(rds|rda|rdata)(\?|$)",
+    # Images
+    r"\.(jpg|jpeg|png|gif|webp|bmp|svg|ico|avif|heic|heif)(\?|$)",
 ]
 
 _CHUNK_SIZE = 1 * 1024 * 1024  # 1 MB chunks
+
+# Default user-agent for binary downloads.
+# Wikimedia and many CDNs block generic or missing UAs, or rate-limit them.
+# Wikimedia recommends the format: ClientName/Version (contact_info)
+# We provide both a Wikimedia-friendly UA and a browser fallback.
+_DEFAULT_UA = "maestro-fetch/1.0 (https://github.com/maestro-ai/maestro; bot)"
+_BROWSER_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/124.0.0.0 Safari/537.36"
+)
 
 
 def _format_size(n_bytes: int) -> str:
@@ -114,10 +129,15 @@ class BinaryAdapter(BaseAdapter):
             resume_from = 0
             print(f"[download] {filename} ({size_str}) ...", file=sys.stderr)
 
+        # On the first attempt use a browser UA; rotate to Wikimedia-friendly UA on retry
+        _ua_rotation = [_BROWSER_UA, _DEFAULT_UA, _BROWSER_UA, _DEFAULT_UA, _BROWSER_UA]
         max_retries = 5
         for attempt in range(max_retries):
             try:
                 headers = dict(config.headers or {})
+                # Inject a browser User-Agent if caller didn't supply one.
+                # Many CDNs (Wikimedia, etc.) return 403/429 for headless requests.
+                headers.setdefault("User-Agent", _ua_rotation[attempt])
                 if resume_from > 0:
                     headers["Range"] = f"bytes={resume_from}-"
 
@@ -127,6 +147,19 @@ class BinaryAdapter(BaseAdapter):
                     headers=headers,
                 ) as client:
                     async with client.stream("GET", url) as response:
+                        if response.status_code == 429:
+                            # Rate-limited: honour Retry-After header, capped at 60s
+                            raw_retry = response.headers.get("Retry-After", "10")
+                            try:
+                                retry_after = min(int(raw_retry), 60)
+                            except ValueError:
+                                retry_after = 10
+                            print(
+                                f"\n[rate-limit] {filename} — waiting {retry_after}s (attempt {attempt+1}/{max_retries})",
+                                file=sys.stderr,
+                            )
+                            await asyncio.sleep(retry_after)
+                            continue
                         if response.status_code == 206:
                             # Server supports Range — append to existing file
                             file_mode = "ab"
@@ -199,10 +232,12 @@ class BinaryAdapter(BaseAdapter):
     async def _head_content_length(url: str, config: FetchConfig) -> int | None:
         """Try HEAD request to get Content-Length. Returns None if unavailable."""
         try:
+            head_headers = dict(config.headers or {})
+            head_headers.setdefault("User-Agent", _DEFAULT_UA)
             async with httpx.AsyncClient(
                 follow_redirects=True,
                 timeout=httpx.Timeout(connect=10.0, read=10.0, write=10.0, pool=10.0),
-                headers=config.headers or {},
+                headers=head_headers,
             ) as client:
                 r = await client.head(url)
                 if r.status_code == 200:
