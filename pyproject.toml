@@ -4,16 +4,19 @@ build-backend = "hatchling.build"
 
 [project]
 name = "maestro-fetch"
-version = "0.1.0"
-description = "Fetch data from any URL — web, PDF, cloud, video, images"
+version = "0.2.0"
+description = "Fetch everything, for agents. Universal data acquisition with smart routing."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
-authors = [{ name = "Maestro AI", email = "hello@maestro.onl" }]
-keywords = ["web-scraping", "data-acquisition", "pdf", "llm", "mcp"]
+license = {text = "MIT"}
+authors = [{name = "Maestro AI", email = "hello@maestro.onl"}]
+keywords = ["agent", "fetch", "scraping", "data-acquisition", "llm", "cli"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Scientific/Engineering",
 ]
 dependencies = [
     "crawl4ai>=0.4.0",
@@ -22,41 +25,42 @@ dependencies = [
     "typer>=0.12",
     "pandas>=2.2",
     "aiofiles>=23.0",
+    "aiosqlite>=0.20",
+    "tomli>=2.0; python_version<'3.11'",
 ]
 
 [project.urls]
 Homepage = "https://maestro.onl"
 Documentation = "https://maestro.onl/docs"
-Repository = "https://github.com/maesto-ai-tech/maestro-fetch"
+Repository = "https://github.com/maestro-ai-stack/maestro-fetch"
 "Dataset Catalog" = "https://ra.maestro.onl/data/datasets"
 "Data Services" = "https://ra.maestro.onl/data"
 
+[project.scripts]
+maestro-fetch = "maestro_fetch.cli:app"
+mfetch = "maestro_fetch.cli:app"
+
 [project.optional-dependencies]
 pdf = ["docling>=2.0", "openpyxl>=3.1"]
-baidupan = []   # no extra deps; uses httpx (already in core)
 media = ["yt-dlp>=2024.1", "openai-whisper>=20231117"]
-vision = []  # uses providers; no extra deps
+browser = ["playwright>=1.40"]
 anthropic = ["anthropic>=0.34"]
 openai = ["openai>=1.40"]
-gemini = ["google-generativeai>=0.7"]
-ollama = ["ollama>=0.3"]
-mcp = ["fastmcp>=0.1"]
 all = [
     "maestro-fetch[pdf]",
     "maestro-fetch[media]",
-    "maestro-fetch[vision]",
+    "maestro-fetch[browser]",
     "maestro-fetch[anthropic]",
     "maestro-fetch[openai]",
-    "maestro-fetch[mcp]",
 ]
-dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "pytest-mock>=3.14", "tabulate>=0.9"]
-
-[project.scripts]
-maestro-fetch = "maestro_fetch.interfaces.cli:app"
-maestro-fetch-mcp = "maestro_fetch.interfaces.mcp_server:run"
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "pytest-mock>=3.14", "ruff>=0.4"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["maestro_fetch"]
+packages = ["src/maestro_fetch"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
