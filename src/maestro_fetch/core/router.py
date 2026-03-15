@@ -10,6 +10,8 @@ from __future__ import annotations
 import re
 
 _RULES: list[tuple[str, str]] = [
+    # Baidu Pan (must precede generic cloud rules)
+    (r"pan\.baidu\.com/", "baidu_pan"),
     # Cloud storage (domain-based — check before extension rules)
     (r"dropbox\.com/", "cloud"),
     (r"drive\.google\.com/", "cloud"),
