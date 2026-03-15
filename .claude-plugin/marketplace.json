@@ -1,0 +1,28 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "maestro-fetch",
+  "metadata": {
+    "description": "Universal data acquisition for AI agents with smart routing.",
+    "version": "1.0.0"
+  },
+  "owner": {
+    "name": "Maestro AI",
+    "email": "hello@maestro.onl"
+  },
+  "plugins": [
+    {
+      "name": "maestro-fetch",
+      "description": "Fetch everything, for agents. Smart routing across web, PDF, Excel, cloud storage, video, authenticated pages, and 50+ public data sources.",
+      "version": "0.2.0",
+      "author": {
+        "name": "Maestro AI"
+      },
+      "source": "./",
+      "category": "data",
+      "homepage": "https://github.com/maestro-ai-stack/maestro-fetch",
+      "repository": "https://github.com/maestro-ai-stack/maestro-fetch",
+      "license": "MIT",
+      "keywords": ["fetch", "scraping", "data", "download", "agent", "browser", "pdf", "excel"]
+    }
+  ]
+}

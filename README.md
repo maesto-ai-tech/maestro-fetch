@@ -139,6 +139,17 @@ pip install maestro-fetch[openai]    # GPT LLM extraction
 pip install maestro-fetch[all]       # Everything
 ```
 
+### Agent integration
+
+```bash
+# Claude Code -- install as skill (via Vercel skills ecosystem)
+npx skills add maestro-ai-stack/maestro-fetch
+
+# Claude Code -- install as plugin (via marketplace)
+/plugin marketplace add maestro-ai-stack/maestro-fetch
+/plugin install maestro-fetch@maestro-fetch
+```
+
 ### Development setup
 
 ```bash

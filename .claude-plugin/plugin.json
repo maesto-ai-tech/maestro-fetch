@@ -1,0 +1,14 @@
+{
+  "name": "maestro-fetch",
+  "description": "Fetch everything, for agents. Universal data acquisition with smart routing across 15+ source types.",
+  "version": "0.2.0",
+  "author": {
+    "name": "Maestro AI",
+    "email": "hello@maestro.onl"
+  },
+  "homepage": "https://github.com/maestro-ai-stack/maestro-fetch",
+  "repository": "https://github.com/maestro-ai-stack/maestro-fetch",
+  "license": "MIT",
+  "keywords": ["fetch", "scraping", "data-acquisition", "agent", "cli"],
+  "skills": "./.claude/skills"
+}
